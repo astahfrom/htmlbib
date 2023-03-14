@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>HTML Bibliography</title>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <style>
+        body {
+            font-size: larger;
+        }
+
+        #boxes {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+        }
+
+        #input_boxes {
+            display: flex;
+            flex-direction: column;
+            width: 48%;
+        }
+
+        #output {
+            width: 48%;
+        }
+
+        textarea {
+            max-width: 98%;
+        }
+
+        #input_template {
+            height: max-content;
+        }
+
+        #input_bib {
+            height: 100%;
+        }
+
+        #headerline {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        pre {
+            white-space: pre-wrap;
+        }
+
+        #render_copy {
+            display: none;
+        }
+
+        #information {
+            width: 60em;
+            padding-left: 1em;
+        }
+
+        #author {
+            padding-left: 1em;
+        }
+    </style>
+</head>
+
+<body>
+    <script type="module">
+        import init, { render_bibliography, verify_bibliography } from './pkg/htmlbib.js';
+
+        function updateInput() {
+            document.getElementById("uploadInput").value = "";
+
+            const input_template = document.getElementById("input_template");
+            const input_bib = document.getElementById("input_bib");
+
+            const form = document.getElementById("view_form");
+            const data = new FormData(form);
+            const view = data.get("view");
+
+            const output = document.getElementById("output");
+            const render_copy = document.getElementById("render_copy");
+
+            const html = render_bibliography(input_bib.value, input_template.value);
+            render_copy.innerHTML = html;
+
+            switch (view) {
+                case "render":
+                    output.innerHTML = html;
+                    break
+                case "raw":
+                    const pre = document.createElement("pre");
+                    pre.innerText = html;
+                    output.replaceChildren(pre)
+                    break
+                case "issues":
+                    const report = verify_bibliography(input_bib.value);
+                    if (report == "") {
+                        output.innerText = "No issues detected."
+                    } else {
+                        output.innerText = report;
+                    }
+                    break
+            }
+        }
+
+        async function updateUpload() {
+            if (this.files.length > 0) {
+                const file = this.files[0];
+                const text = await file.text();
+                document.getElementById("input_bib").value = text;
+                updateInput();
+            }
+        }
+
+        function copyToClipboard() {
+            const copyText = document.getElementById("render_copy").innerHTML;
+            const textArea = document.createElement('textarea');
+            textArea.textContent = copyText;
+            document.body.append(textArea);
+            textArea.select();
+            document.execCommand("copy");
+            textArea.remove()
+        }
+
+        function download(filename, text) {
+            var element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', filename);
+
+            element.style.display = 'none';
+            document.body.appendChild(element);
+
+            element.click();
+
+            document.body.removeChild(element);
+        }
+
+        function downloadOutput() {
+            const text = document.getElementById("render_copy").innerHTML;
+            download("bib.html", text);
+        }
+
+        async function run() {
+            await init();
+
+            updateInput();
+        }
+
+        window.addEventListener('DOMContentLoaded', (event) => {
+            document.getElementById("view_form").addEventListener("change", updateInput, false);
+            document.getElementById("input_template").addEventListener("input", updateInput, false);
+            document.getElementById("input_bib").addEventListener("input", updateInput, false);
+            document.getElementById("uploadInput").addEventListener("change", updateUpload, false);
+            document.getElementById("clipboard").addEventListener("click", copyToClipboard, false);
+            document.getElementById("download").addEventListener("click", downloadOutput, false);
+        });
+
+        run();
+    </script>
+
+    <h1>HTML Bibliography &mdash; Create a list of publications from a Bib(La)TeX file</h1>
+
+    <div id="headerline">
+        <div>
+            <label for="uploadInput">Upload bibliography:</label>
+            <input type="file" accept=".bib" name="bibFiles" id="uploadInput">
+        </div>
+
+        <div>
+            <label for="clipboard">Copy HTML to clipboard:</label>
+            <button id="clipboard" name="clipboard">Copy!</button>
+        </div>
+
+        <div>
+            <label for="download">Save HTML:</label>
+            <button id="download" name="download">Save!</button>
+        </div>
+
+        <div id="view_options">
+            <form id="view_form">
+                <fieldset>
+                    <legend>View:</legend>
+                    <div>
+                        <input type="radio" id="view_render" name="view" value="render" checked />
+                        <label for="view_render">Rendered HTML</label>
+
+                        <input type="radio" id="view_raw" name="view" value="raw" />
+                        <label for="view_raw">Raw HTML</label>
+
+                        <input type="radio" id="view_issues" name="view" value="issues" />
+                        <label for="view_issues">Bibliography issues</label>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+
+    </div>
+
+    <br>
+
+    <div id="boxes">
+        <div id="input_boxes">
+            <textarea name="input" id="input_template" rows="42" cols="60">
+{% for e in entries %}
+<article>
+  <b>{{ e.title }}</b>  
+  <address>{{ e.author_format }}.</address>
+  <p>
+  {% if e.booktitle %}
+    {% if e.editor_inits %} In {{ e.editor_inits }} (ed.) {% endif %}
+    <i>{{ e.booktitle }}</i>,
+    {% if e.series %} {{ e.series }} {% if e.volume %}{{ e.volume }}{% endif %}, {% endif %}
+    {% if e.pages %} pp. {{ e.pages }}, {% endif %}
+    {% if e.publisher %} {{ e.publisher }}, {% endif %}
+    {% if e.year %}{{ e.year }}{% endif %}. <br>
+  {% elif e.journal %}
+    <i>{{ e.journal }}
+      {% if e.volume and e.number %} {{ e.volume }}({{ e.number }}) {% endif %}
+    </i>,
+      {% if e.pages %} pp. {{ e.pages }}, {% endif %}
+      {{ e.year }}. <br>
+  {% elif e.note %}
+    <cite>{{ e.note }}</cite>, {{ e.year }}. <br>
+  {% endif %}
+
+  {% if e.doi %}DOI: <a href="https://doi.org/{{ e.doi | safe }}">{{ e.doi }}</a> <br> {% endif %}
+  {% if e.url %}URL: <a href="{{ e.url | safe }}">{{ e.url }}</a> <br> {% endif %}
+
+  {% if e.abstract %}
+  <details>
+    <summary>Abstract</summary>
+    <p>{{ e.abstract }}</p>
+  </details>
+  {% endif %}
+
+  {% if e.bibtex %}
+  <details>
+    <summary>BibTeX</summary>
+    <pre>{{ e.bibtex }}</pre>
+  </details>
+  {% endif %}
+  </p>
+</article>
+{% endfor %}
+            </textarea>
+
+            <textarea name="input" id="input_bib" rows="30" cols="60">
+@inproceedings{DBLP:conf/hopl/Kay93,
+  author    = {Alan C. Kay},
+  editor    = {John A. N. Lee and
+               Jean E. Sammet},
+  title     = {The Early History of Smalltalk},
+  booktitle = {History of Programming Languages Conference (HOPL-II), Preprints,
+               Cambridge, Massachusetts, USA, April 20-23, 1993},
+  pages     = {69--95},
+  publisher = {{ACM}},
+  year      = {1993},
+  doi       = {10.1145/154766.155364}
+}
+
+@article{DBLP:journals/cacm/Backus78,
+  author    = {John W. Backus},
+  title     = {Can Programming Be Liberated From the von Neumann Style? {A} Functional
+               Style and its Algebra of Programs},
+  journal   = {Communications of the {ACM}},
+  volume    = {21},
+  number    = {8},
+  pages     = {613--641},
+  year      = {1978},
+  doi       = {10.1145/359576.359579}
+}
+            </textarea>
+        </div>
+
+        <div id="output"></div>
+
+        <div id="render_copy"></div>
+    </div>
+
+    <h2>Information</h2>
+    <div id="information">
+        <p>
+            Are you tired of maintaining a list of publications for your LaTeX resumé AND your homepage? No more!
+            Simply compile a HTML list of publications from your Bib(La)TeX file.
+        </p>
+
+        <p>
+            This website combines the <a href="https://github.com/typst/biblatex">BibLaTeX</a> and <a
+                href="https://tera.netlify.app/">Tera</a> projects for Rust and compiles them to WebAssembly using <a
+                href="https://github.com/rustwasm/wasm-bindgen">wasm-bindgen</a>.
+            The editor updates as you type and tries to print useful error messages.
+
+            To use it, simply upload your own Bib(La)TeX file, customize the HTML template, and download the HTML.
+
+            It is also possible to verify the bibliography entry.
+        </p>
+
+        <p>
+            The bibliography entries are avaiable in the variable <code>entries</code>.
+
+            For each entry <code>e</code>, each field <code>f</code> in the bibliography entry is avaiable as the
+            variable
+            <code>e.f</code>, e.g. <code>e.author</code> for the author.
+
+            By default, <code>author</code> and <code>editor</code> match the input entry.
+            A couple of extra fields are avaiable:
+        <ul>
+            <li><code>author_format</code> writes out the authors as <i>GivenName Prefix Name Suffix</i> and abbreviates
+                more than three authors with <i>et al</i>.</li>
+            <li><code>editor_format</code> does the same for editors.</li>
+            <li><code>author_inits</code> writes out the authors as <i>G. Prefix Name Suffix</i> and abbreviates more
+                than three authors with <i>et al</i>.</li>
+            <li><code>editor_inits</code> does the same for editors.</li>
+        </ul>
+
+        It is possible to filter the entries, for instance the following only loops over entries of type
+        <code>@article</code>:
+        <code>{% for e in entries | filter(attribute="entry_type", value="article") %}</code>
+
+        See the <a href="https://tera.netlify.app/docs">Tera documentation</a> for more examples of filters.
+        </p>
+    </div>
+
+    <h2>Author</h2>
+    <div id="author">
+        <address> Asta Halkjær From.<br>
+            GitHub: <a href="https://www.github.com/astahfrom">github.com/astahfrom</a><br>
+            Repository: <a href="https://www.github.com/astahfrom/htmlbib">github.com/astahfrom/htmlbib</a>
+        </address>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,19 @@
+[package]
+name = "htmlbib"
+version = "0.1.0"
+authors = ["Asta Halkjær From <andro.from@gmail.com>"]
+edition = "2021"
+license = "MIT"
+description = """
+Create an HTML list of publications from a BibTeX file.
+"""
+repository = "https://github.com/astahfrom/htmlbib"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+biblatex = "0.6.3"
+getrandom = { version = "0.2.8", features = ["js"] }
+tera = "1.18.0"
+wasm-bindgen = "0.2.84"
