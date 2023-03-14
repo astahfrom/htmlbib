@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <title>HTML Bibliography</title>
-    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
     <style>
         body {
             font-size: larger;
@@ -26,18 +26,14 @@
         }
 
         textarea {
-            max-width: 98%;
-        }
-
-        #input_template {
-            height: max-content;
+            resize: vertical;
         }
 
         #input_bib {
             height: 100%;
         }
 
-        #headerline {
+        #header_line {
             display: flex;
             justify-content: space-around;
             align-items: center;
@@ -53,11 +49,11 @@
 
         #information {
             max-width: 60em;
-            padding-left: 1em;
         }
 
-        #author {
+        .padded {
             padding-left: 1em;
+            padding-right: 1em;
         }
     </style>
 </head>
@@ -72,6 +68,8 @@
             const input_template = document.getElementById("input_template");
             const input_bib = document.getElementById("input_bib");
 
+            localStorage.setItem("template", input_template.value);
+
             const form = document.getElementById("view_form");
             const data = new FormData(form);
             const view = data.get("view");
@@ -81,6 +79,11 @@
 
             const html = render_bibliography(input_bib.value, input_template.value);
             render_copy.innerHTML = html;
+
+            const report = verify_bibliography(input_bib.value);
+            const nerrors = (report.match(/Entry/g) || []).length;
+            document.getElementById("nissues").innerHTML = nerrors;
+
 
             switch (view) {
                 case "render":
@@ -92,7 +95,6 @@
                     output.replaceChildren(pre)
                     break
                 case "issues":
-                    const report = verify_bibliography(input_bib.value);
                     if (report == "") {
                         output.innerText = "No issues detected."
                     } else {
@@ -139,6 +141,15 @@
             download("bib.html", text);
         }
 
+        function forgetTemplate() {
+            if (window.confirm("Do you really want to reset the template and forget your changes?")) {
+                localStorage.clear();
+                const templ = document.getElementById("input_template");
+                templ.value = templ.defaultValue;
+                updateInput();
+            }
+        }
+
         async function run() {
             await init();
 
@@ -146,12 +157,18 @@
         }
 
         window.addEventListener('DOMContentLoaded', (event) => {
+            const templ = localStorage.getItem("template");
+            if (templ) {
+                document.getElementById("input_template").value = templ;
+            }
+
             document.getElementById("view_form").addEventListener("change", updateInput, false);
             document.getElementById("input_template").addEventListener("input", updateInput, false);
             document.getElementById("input_bib").addEventListener("input", updateInput, false);
             document.getElementById("uploadInput").addEventListener("change", updateUpload, false);
             document.getElementById("clipboard").addEventListener("click", copyToClipboard, false);
             document.getElementById("download").addEventListener("click", downloadOutput, false);
+            document.getElementById("forget").addEventListener("click", forgetTemplate, false);
         });
 
         run();
@@ -159,7 +176,7 @@
 
     <h1>HTML Bibliography &mdash; Create a list of publications from a Bib(La)TeX file</h1>
 
-    <div id="headerline">
+    <div id="header_line">
         <div>
             <label for="uploadInput">Upload bibliography:</label>
             <input type="file" accept=".bib" name="bibFiles" id="uploadInput">
@@ -180,14 +197,15 @@
                 <fieldset>
                     <legend>View:</legend>
                     <div>
-                        <input type="radio" id="view_render" name="view" value="render" checked />
+                        <input type="radio" id="view_render" name="view" value="render" checked>
                         <label for="view_render">Rendered HTML</label>
 
-                        <input type="radio" id="view_raw" name="view" value="raw" />
+                        <input type="radio" id="view_raw" name="view" value="raw">
                         <label for="view_raw">Raw HTML</label>
 
-                        <input type="radio" id="view_issues" name="view" value="issues" />
+                        <input type="radio" id="view_issues" name="view" value="issues">
                         <label for="view_issues">Bibliography issues</label>
+                        (<span id="nissues"></span>)
                     </div>
                 </fieldset>
             </form>
@@ -199,7 +217,7 @@
 
     <div id="boxes">
         <div id="input_boxes">
-            <textarea name="input" id="input_template" rows="42" cols="60">
+            <textarea name="input" id="input_template" rows="48" cols="60">
 {% for e in entries %}
 <article>
   <b>{{ e.title }}</b>  
@@ -277,55 +295,78 @@
     </div>
 
     <h2>Information</h2>
-    <div id="information">
+    <div id="information" class="padded">
         <p>
-            Are you tired of maintaining a list of publications for your LaTeX resumé AND your homepage? No more!
+            Are you tired of maintaining a list of publications for your LaTeX résumé AND your
+            homepage? No more!
             Simply compile a HTML list of publications from your Bib(La)TeX file.
         </p>
 
         <p>
-            This website combines the <a href="https://github.com/typst/biblatex">BibLaTeX</a> and <a
-                href="https://tera.netlify.app/">Tera</a> projects for Rust and compiles them to WebAssembly using <a
-                href="https://github.com/rustwasm/wasm-bindgen">wasm-bindgen</a>.
+            This website combines the <a href="https://github.com/typst/biblatex">BibLaTeX</a> and
+            <a href="https://tera.netlify.app/">Tera</a> projects for Rust and compiles them to
+            WebAssembly using <a href="https://github.com/rustwasm/wasm-bindgen">wasm-bindgen</a>.
             The editor updates as you type and tries to print useful error messages.
 
-            To use it, simply upload your own Bib(La)TeX file, customize the HTML template, and download the HTML.
+            To use it, simply upload your own Bib(La)TeX file, customize the HTML template, and
+            download the HTML.
 
-            It is also possible to verify the bibliography entry.
+            It is also possible to verify the bibliography entries.
         </p>
 
         <p>
-            The bibliography entries are avaiable in the variable <code>entries</code>.
+            The bibliography entries are available in the variable <code>entries</code>.
 
-            For each entry <code>e</code>, each field <code>f</code> in the bibliography entry is avaiable as the
+            For each entry <code>e</code>, each field <code>f</code> in the bibliography entry is
+            available as the
             variable
             <code>e.f</code>, e.g. <code>e.author</code> for the author.
 
             By default, <code>author</code> and <code>editor</code> match the input entry.
-            A couple of extra fields are avaiable:
+            A couple of extra fields are available:
+        </p>
         <ul>
-            <li><code>author_format</code> writes out the authors as <i>GivenName Prefix Name Suffix</i> and abbreviates
+            <li><code>author_format</code> writes out the authors as <i>GivenName Prefix Name
+                    Suffix</i> and abbreviates
                 more than three authors with <i>et al</i>.</li>
             <li><code>editor_format</code> does the same for editors.</li>
-            <li><code>author_inits</code> writes out the authors as <i>G. Prefix Name Suffix</i> and abbreviates more
+            <li><code>author_inits</code> writes out the authors as <i>G. Prefix Name Suffix</i> and
+                abbreviates more
                 than three authors with <i>et al</i>.</li>
             <li><code>editor_inits</code> does the same for editors.</li>
         </ul>
 
-        It is possible to filter the entries, for instance the following only loops over entries of type
-        <code>@article</code>:
-        <code>{% for e in entries | filter(attribute="entry_type", value="article") %}</code>
+        <p>
+            It is possible to filter the entries, for instance the following only loops over entries of
+            type
+            <code>@article</code>:
+            <code>{% for e in entries | filter(attribute="entry_type", value="article") %}</code>
 
-        See the <a href="https://tera.netlify.app/docs">Tera documentation</a> for more examples of filters.
+            See the <a href="https://tera.netlify.app/docs">Tera documentation</a> for more examples of
+            filters.
         </p>
     </div>
 
+    <h2>Reset Template</h2>
+    <div class="padded">
+
+        <p>
+            The website automatically saves changes to the HTML template between page loads.
+            To forget your changes and reset to the default template, press this button:
+        </p>
+
+        <label for="forget">Forget my changes to the template:</label>
+        <button id="forget" name="forget">FORGET</button>
+    </div>
+
     <h2>Author</h2>
-    <div id="author">
+    <div id="author" class="padded">
+        <p>
         <address> Asta Halkjær From.<br>
             GitHub: <a href="https://www.github.com/astahfrom">github.com/astahfrom</a><br>
             Repository: <a href="https://www.github.com/astahfrom/htmlbib">github.com/astahfrom/htmlbib</a>
         </address>
+        </p>
     </div>
 </body>
 
