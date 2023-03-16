@@ -32,6 +32,7 @@ fn inits_name(p: &Person) -> String {
             inits_vec.push(' ');
         }
     }
+    inits_vec.pop(); // Pop the last added space.
     let inits: String = inits_vec.into_iter().collect();
     format_name(&inits, &p.prefix, &p.name, &p.suffix)
 }
