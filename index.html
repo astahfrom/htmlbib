@@ -226,19 +226,18 @@
     {% if e.series %} {{ e.series }} {% if e.volume %}{{ e.volume }}{% endif %}, {% endif %}
     {% if e.pages %} pp. {{ e.pages }}, {% endif %}
     {% if e.publisher %} {{ e.publisher }}, {% endif %}
-    {% if e.year %}{{ e.year }}{% endif %}. <br>
+    {% if e.year %}{{ e.year }}{% endif %}.
   {% elif e.journal %}
     <i>{{ e.journal }}
       {% if e.volume and e.number %} {{ e.volume }}({{ e.number }}) {% endif %}
     </i>,
       {% if e.pages %} pp. {{ e.pages }}, {% endif %}
-      {{ e.year }}. <br>
-  {% elif e.note %}
-    <cite>{{ e.note }}</cite>, {{ e.year }}. <br>
+      {{ e.year }}.
   {% endif %}
 
   {% if e.doi %}DOI: <a href="https://doi.org/{{ e.doi | safe }}">{{ e.doi }}</a> <br> {% endif %}
   {% if e.url %}URL: <a href="{{ e.url | safe }}">{{ e.url }}</a> <br> {% endif %}
+  </p>
 
   {% if e.abstract %}
   <details>
@@ -253,7 +252,6 @@
     <pre>{{ e.bibtex }}</pre>
   </details>
   {% endif %}
-  </p>
 </article>
 {% endfor %}
             </textarea>
