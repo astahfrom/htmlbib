@@ -321,14 +321,15 @@
             A couple of extra fields are available:
         </p>
         <ul>
-            <li><code>author_format</code> writes out the authors as <i>GivenName Prefix Name
-                    Suffix</i> and abbreviates
-                more than three authors with <i>et al</i>.</li>
-            <li><code>editor_format</code> does the same for editors.</li>
-            <li><code>author_inits</code> writes out the authors as <i>G. Prefix Name Suffix</i> and
-                abbreviates more
-                than three authors with <i>et al</i>.</li>
-            <li><code>editor_inits</code> does the same for editors.</li>
+            <li><code>author_format</code> and <code>editor_format</code> write out the authors/editors as <i>GivenName
+                    Prefix Name
+                    Suffix</i>.</li>
+            <li><code>author_format_et_al</code> and <code>editor_format_et_al</code> do the same, but abbreviate four
+                or more people as <i>FirstPerson et al</i>.</li>
+            <li><code>author_inits</code> and <code>editor_inits</code> write out the authors/editors as <i>G. Prefix
+                    Name Suffix</i>.</li>
+            <li><code>author_inits_et_al</code> and <code>editor_inits_et_al</code> do the same, but abbreviate four or
+                more people as <i>FirstPerson et al</i>.</li>
         </ul>
 
         <p>
@@ -338,7 +339,7 @@
             <code>{% for e in entries | filter(attribute="entry_type", value="article") %}</code>
 
             See the <a href="https://tera.netlify.app/docs">Tera documentation</a> for more examples of
-            filters.
+            filters, like <code>sort</code> and <code>slice</code>.
         </p>
     </div>
 
@@ -358,7 +359,7 @@
     <div id="author" class="padded">
         <p>
         <address> Asta Halkjær From.<br>
-            GitHub: <a href="https://www.github.com/astahfrom">github.com/astahfrom</a><br>
+            Homepage: <a href="https://astahfrom.github.io">astahfrom.github.io</a><br>
             Repository: <a href="https://www.github.com/astahfrom/htmlbib">github.com/astahfrom/htmlbib</a>
         </address>
         </p>

@@ -37,7 +37,7 @@ fn inits_name(p: &Person) -> String {
     format_name(&inits, &p.prefix, &p.name, &p.suffix)
 }
 
-fn format_names<F>(ps: &[Person], f: F) -> String
+fn format_names<F>(ps: &[Person], f: F, et_al: bool) -> String
 where
     F: Fn(&Person) -> String,
 {
@@ -50,7 +50,18 @@ where
         [p] => f(p),
         [p1, p2] => format!("{} and {}", f(p1), f(p2)),
         [p1, p2, p3] => format!("{}, {} and {}", f(p1), f(p2), f(p3)),
-        [p, ..] => format!("{} et al", f(p)),
+        [p, ..] if et_al => format!("{} et al", f(p)),
+        [first @ .., last] => {
+            let mut ps = vec![];
+            for p in first {
+                ps.push(f(p));
+                ps.push(", ".to_string());
+            }
+            ps.pop(); // pop the last comma
+            ps.push(" ".to_string()); // but keep the space
+            let first_string = ps.concat();
+            format!("{} and {}", first_string, f(last))
+        }
     }
 }
 
@@ -124,8 +135,22 @@ pub fn render_bibliography(raw_bib: &str, templ: &str) -> String {
         res.insert("biblatex".to_string(), entry.to_biblatex_string());
 
         if let Ok(ref author) = entry.author() {
-            res.insert("author_format".to_string(), format_names(author, full_name));
-            res.insert("author_inits".to_string(), format_names(author, inits_name));
+            res.insert(
+                "author_format".to_string(),
+                format_names(author, full_name, false),
+            );
+            res.insert(
+                "author_inits".to_string(),
+                format_names(author, inits_name, false),
+            );
+            res.insert(
+                "author_format_et_al".to_string(),
+                format_names(author, full_name, true),
+            );
+            res.insert(
+                "author_inits_et_al".to_string(),
+                format_names(author, inits_name, true),
+            );
         }
 
         if let Ok(ref editors_types) = entry.editors() {
@@ -136,11 +161,19 @@ pub fn render_bibliography(raw_bib: &str, templ: &str) -> String {
 
             res.insert(
                 "editor_format".to_string(),
-                format_names(&editors, full_name),
+                format_names(&editors, full_name, false),
             );
             res.insert(
                 "editor_inits".to_string(),
-                format_names(&editors, inits_name),
+                format_names(&editors, inits_name, false),
+            );
+            res.insert(
+                "editor_format_et_al".to_string(),
+                format_names(&editors, full_name, true),
+            );
+            res.insert(
+                "editor_inits_et_al".to_string(),
+                format_names(&editors, inits_name, true),
             );
         }
 
