@@ -215,45 +215,42 @@
     <div id="boxes">
         <div id="input_boxes">
             <textarea name="input" id="input_template" rows="48" cols="60">
+<dl>
 {% for e in entries %}
-<article>
-  <b>{{ e.title }}</b>  
-  <address>{{ e.author_format }}.</address>
-  <p>
+<dt><b>{{ e.title }}</b></dt>
+<dd>
+  {{ e.author_format }}.
   {% if e.booktitle %}
-    {% if e.editor_inits %} In {{ e.editor_inits }} (ed.) {% endif %}
+    {% if e.editor_inits_et_al %} In {{ e.editor_inits_et_al }} (ed.) {% endif %}
     <i>{{ e.booktitle }}</i>,
-    {% if e.series %} {{ e.series }} {% if e.volume %}{{ e.volume }}{% endif %}, {% endif %}
+    {% if e.series %}{{ e.series }}{% if e.volume %} {{ e.volume }}{% endif %}, {% endif %}
     {% if e.pages %} pp. {{ e.pages }}, {% endif %}
     {% if e.publisher %} {{ e.publisher }}, {% endif %}
-    {% if e.year %}{{ e.year }}{% endif %}.
+    {% if e.note %}<i>{{ e.note }},</i>{% endif %}
+    {{ e.year }}.
   {% elif e.journal %}
-    <i>{{ e.journal }}
-      {% if e.volume and e.number %} {{ e.volume }}({{ e.number }}) {% endif %}
-    </i>,
-      {% if e.pages %} pp. {{ e.pages }}, {% endif %}
+    <i>{{ e.journal }}{% if e.volume and e.number %} {{ e.volume }}({{ e.number }}){% endif %}</i>,
+      {% if e.pages %}pp. {{ e.pages }},{% endif %}
+      {% if e.note %}<i>{{ e.note }},</i>{% endif %}
       {{ e.year }}.
+  {% elif e.note %}
+    <i>{{ e.note }}</i>, {{ e.year }}.
   {% endif %}
-
-  {% if e.doi %}DOI: <a href="https://doi.org/{{ e.doi | safe }}">{{ e.doi }}</a> <br> {% endif %}
-  {% if e.url %}URL: <a href="{{ e.url | safe }}">{{ e.url }}</a> <br> {% endif %}
-  </p>
-
+  {% if e.doi %}DOI: <a href="https://doi.org/{{ e.doi | safe }}">{{ e.doi }}</a>. {% endif %}
+  {% if e.url %}URL: <a href="{{ e.url | safe }}">{{ e.url }}</a>. {% endif %}
   {% if e.abstract %}
   <details>
-    <summary>Abstract</summary>
+    <summary>Abstract.</summary>
     <p>{{ e.abstract }}</p>
-  </details>
-  {% endif %}
-
+  </details>{% endif %}
   {% if e.bibtex %}
   <details>
-    <summary>BibTeX</summary>
+    <summary>BibTeX.</summary>
     <pre>{{ e.bibtex }}</pre>
-  </details>
-  {% endif %}
-</article>
+  </details>{% endif %}
+</dd>
 {% endfor %}
+</dl>
             </textarea>
 
             <textarea name="input" id="input_bib" rows="30" cols="60">
